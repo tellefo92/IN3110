@@ -1,0 +1,9 @@
+README.md
+setup.py
+bin/instapy
+instapy/__init__.py
+instapy/functions.py
+instapy.egg-info/PKG-INFO
+instapy.egg-info/SOURCES.txt
+instapy.egg-info/dependency_links.txt
+instapy.egg-info/top_level.txt

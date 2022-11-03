@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+import numpy as np
+import cv2
+import time
+import sys
+import os
+import argparse
+from numba import njit
+import instapy
+from instapy import grayscale_image, sepia_image
+
+parser = argparse.ArgumentParser(description='instapy, your all purpose grayscale and sepia filter package for your pictures!')
+parser.add_argument('-f', '--file', type=str, metavar='FILE', required=True, help='Either filename of file or path to file to apply filter to')
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('-se', '--sepia', action='store_true', help='Select sepia filter')
+group.add_argument('-g', '--gray', action='store_true', help='Select grayscale filter')
+parser.add_argument('-sc', '--scale', type=float, metavar='SCALE', required=False, help='Scale factor to resize image. Must be a float greater than 0')
+parser.add_argument('-sv', '--stepless', type=float, metavar='VALUE', required=False, help='Intensity of sepia effect on image. Must be a float between 0 and 1')
+parser.add_argument('-i', '--implement', type=str, metavar='IMPLEMENTATION', required=True, help='Choose between python, numpy or numba')
+parser.add_argument('-o', '--out', type=str, metavar='PATH', required=False, help='Either filename with correct file extension, or path/file if image should be stored in a different directory.')
+parser.add_argument('-R', '--runtime', action='store_true', help='Calculates average runtime of image conversion over 3 runs.')
+args = parser.parse_args()
+
+input_filename = args.file
+
+implementation = args.implement
+
+output_filename = args.out
+
+scale = args.scale if args.scale != None else 1
+
+if args.gray:
+    func = grayscale_image
+    grayscale_image(input_filename, output_filename=output_filename, implementation=implementation, scale=scale)
+
+elif args.sepia:
+    func = sepia_image
+    if args.stepless is not None:
+        stepless_value = args.stepless
+        if 0 <= stepless_value <= 1:
+            sepia_image(input_filename, output_filename=output_filename, implementation=implementation, stepless_value=stepless_value, scale=scale)
+        else:
+            raise ValueError ("Stepless value must be a float between 0 and 1")
+    else:
+        sepia_image(input_filename, output_filename=output_filename, implementation=implementation, scale=scale)
+
+if args.runtime:
+    tot_time = 0
+    for i in range(3):
+        tic = time.perf_counter()
+        func(input_filename, implementation=implementation, scale=scale)
+        toc = time.perf_counter()
+        tot_time += (toc-tic)
+    print(f"Average time over 3 runs: {tot_time/3:.5f} seconds")
